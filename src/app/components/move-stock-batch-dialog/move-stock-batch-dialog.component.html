@@ -1,0 +1,88 @@
+<dialog
+  class="modal modal-open modal-bottom sm:modal-middle"
+  role="dialog"
+  aria-modal="true"
+  aria-label="Mover Productos Seleccionados"
+>
+  <div class="modal-box w-11/12 max-w-2xl">
+    <h3 class="text-base font-bold mb-1 sm:text-lg">Mover Productos Seleccionados</h3>
+    <p class="text-sm text-base-content/60 mb-3">Se moverán {{ items().length }} productos.</p>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
+      <!-- Target Shelf -->
+      <div class="form-control w-full">
+        <label class="label py-1" for="targetShelf">
+          <span class="label-text text-sm font-medium">Estantería destino</span>
+        </label>
+        <select
+          id="targetShelf"
+          formControlName="targetShelfId"
+          class="select select-bordered select-sm w-full sm:select-md"
+        >
+          <option value="" disabled>Selecciona estantería...</option>
+          @for (shelf of availableShelves(); track shelf.id) {
+            <option [value]="shelf.id">{{ shelf.locationCode }} — {{ shelf.description }}</option>
+          }
+        </select>
+      </div>
+
+      <!-- Items List with Quantities -->
+      <div class="overflow-x-auto max-h-60 border rounded-lg">
+        <table class="table table-xs table-pin-rows">
+          <thead>
+            <tr>
+              <th>Producto</th>
+              <th class="w-32">Cantidad a Mover</th>
+            </tr>
+          </thead>
+          <tbody formArrayName="items">
+            @for (control of itemsArray.controls; track control; let i = $index) {
+              <tr [formGroupName]="i">
+                <td>
+                  <div class="font-medium text-sm">{{ items()[i].product.name }}</div>
+                  <div class="text-xs text-base-content/60">
+                    Disponible: {{ items()[i].quantity }}
+                    @if (items()[i].product.sku) {
+                      | SKU: {{ items()[i].product.sku }}
+                    }
+                  </div>
+                </td>
+                <td>
+                  <input
+                    type="number"
+                    formControlName="amount"
+                    class="input input-bordered input-xs w-full"
+                    min="1"
+                    [max]="items()[i].quantity"
+                    title="Cantidad a mover"
+                  />
+                  @if (control.get('amount')?.invalid) {
+                    <div class="text-error text-xs mt-1">Inválido</div>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Actions -->
+      <div class="modal-action mt-4">
+        <button type="button" class="btn btn-ghost btn-sm" (click)="cancel.emit()">Cancelar</button>
+        <button
+          type="submit"
+          class="btn btn-primary btn-sm"
+          [disabled]="form.invalid || submitting()"
+        >
+          @if (submitting()) {
+            <span class="loading loading-spinner loading-xs"></span>
+          }
+          Mover {{ items().length }} Productos
+        </button>
+      </div>
+    </form>
+  </div>
+  <form method="dialog" class="modal-backdrop">
+    <button (click)="cancel.emit()" title="Cerrar">close</button>
+  </form>
+</dialog>

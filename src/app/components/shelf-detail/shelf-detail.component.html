@@ -1,0 +1,1264 @@
+<div class="space-y-4">
+  <!-- Breadcrumbs + Header -->
+  <div class="flex items-center justify-between">
+    <div class="flex items-center gap-2 min-w-0 flex-1">
+      <a [routerLink]="parentRoute()" class="btn btn-ghost btn-sm btn-circle shrink-0">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 19l-7-7 7-7"
+          />
+        </svg>
+      </a>
+      @if (shelf()) {
+        <div class="min-w-0 flex-1">
+          @if (breadcrumbs().length > 1) {
+            <div class="breadcrumbs text-xs p-0 mb-0.5">
+              <ul>
+                <li><a routerLink="/" class="text-base-content/50">Inicio</a></li>
+                @for (bc of breadcrumbs(); track bc.id; let last = $last) {
+                  <li>
+                    @if (!last) {
+                      <a
+                        [routerLink]="['/shelf', bc.id]"
+                        class="text-base-content/60 hover:text-primary"
+                      >
+                        {{ bc.locationCode }}
+                      </a>
+                    } @else {
+                      <span class="font-semibold text-base-content">{{ bc.locationCode }}</span>
+                    }
+                  </li>
+                }
+              </ul>
+            </div>
+          }
+          <h1 class="text-lg font-bold text-base-content sm:text-2xl">
+            {{ shelf()!.locationCode }}
+          </h1>
+          @if (shelf()!.description) {
+            <p class="text-xs text-base-content/50 truncate sm:text-sm">
+              {{ shelf()!.description }}
+            </p>
+          }
+        </div>
+      }
+    </div>
+    @if (shelf()) {
+      <div class="flex gap-1">
+        @if (selectedBatchItems().size > 0) {
+          <button
+            class="btn btn-outline btn-sm gap-1 mr-1"
+            (click)="openBatchCategoryDialog()"
+            title="Editar categorías de los seleccionados"
+          >
+            <span class="hidden sm:inline">Categorías ({{ selectedBatchItems().size }})</span>
+            <span class="sm:hidden">Editar ({{ selectedBatchItems().size }})</span>
+          </button>
+          <button
+            class="btn btn-secondary btn-sm gap-1 mr-2"
+            (click)="openBatchMoveDialog()"
+            title="Mover seleccionados"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+              />
+            </svg>
+            <span class="hidden sm:inline">Mover ({{ selectedBatchItems().size }})</span>
+            <span class="sm:hidden">({{ selectedBatchItems().size }})</span>
+          </button>
+        }
+        <button
+          class="btn btn-primary btn-sm gap-1"
+          (click)="showAddProduct.set(true)"
+          title="Agregar producto"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          <span class="hidden sm:inline">Agregar</span>
+        </button>
+
+        <!-- Export PDF Shelf -->
+        <button
+          class="btn btn-outline btn-sm gap-1"
+          (click)="exportPDF()"
+          title="Generar PDF"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
+          <span class="hidden sm:inline">PDF</span>
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-ghost btn-sm"
+          (click)="openEditShelf()"
+          title="Editar estantería"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+            />
+          </svg>
+        </button>
+        <button
+          class="btn btn-ghost btn-sm text-error"
+          (click)="onDeleteShelf()"
+          title="Eliminar estantería"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+            />
+          </svg>
+        </button>
+      </div>
+    }
+  </div>
+
+  <!-- Loading -->
+  @if (loading()) {
+    <div class="flex justify-center py-8">
+      <span class="loading loading-spinner loading-md text-primary"></span>
+    </div>
+  }
+
+  <!-- Stats (recursive totals) -->
+  @if (shelf() && !loading()) {
+    <div class="flex gap-4">
+      <div class="text-center">
+        <p class="text-xl font-bold text-primary sm:text-2xl">
+          {{ recursiveTotals().totalProducts }}
+        </p>
+        <p class="text-[10px] text-base-content/50 sm:text-xs">Productos</p>
+      </div>
+      <div class="divider divider-horizontal mx-0"></div>
+      <div class="text-center">
+        <p class="text-xl font-bold text-secondary sm:text-2xl">
+          {{ recursiveTotals().totalUnits }}
+        </p>
+        <p class="text-[10px] text-base-content/50 sm:text-xs">Unidades</p>
+      </div>
+      @if (shelf()!.children && shelf()!.children!.length > 0) {
+        <div class="divider divider-horizontal mx-0"></div>
+        <div class="text-center">
+          <p class="text-xl font-bold text-accent sm:text-2xl">
+            {{ shelf()!.children!.length }}
+          </p>
+          <p class="text-[10px] text-base-content/50 sm:text-xs">Cajones</p>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Sub-shelves (Children) Section -->
+  @if (shelf() && !loading() && (shelf()!.children?.length || canCreateSubShelf())) {
+    <div class="space-y-2">
+      <div class="flex items-center justify-between">
+        <h2 class="text-sm font-semibold text-base-content/70">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-4 w-4 inline mr-1 -mt-0.5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+            />
+          </svg>
+          Sub-estanterías
+          @if (isDragging()) {
+            <span class="text-xs text-primary ml-2 animate-pulse"
+              >← Suelta sobre un cajón para mover</span
+            >
+          }
+        </h2>
+        @if (canCreateSubShelf()) {
+          <button
+            class="btn btn-outline btn-xs btn-primary gap-1"
+            (click)="showCreateSubShelf.set(true)"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-3 w-3"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 4v16m8-8H4"
+              />
+            </svg>
+            Nuevo Cajón
+          </button>
+        }
+      </div>
+      <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-2">
+        @for (child of shelf()!.children; track child.id) {
+          <div
+            class="card bg-base-100 shadow-sm border border-base-300/30 hover:border-primary/50 hover:shadow-md transition-all cursor-pointer group relative"
+            (dragover)="onChildDragOver($event)"
+            (dragleave)="onChildDragLeave($event)"
+            (drop)="onChildDrop($event, child)"
+          >
+            <!-- Delete sub-shelf button -->
+            <button
+              class="btn btn-ghost btn-xs btn-square absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity text-error z-10"
+              (click)="onDeleteSubShelf(child); $event.stopPropagation()"
+              title="Eliminar cajón"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3 w-3"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+            <a [routerLink]="['/shelf', child.id]" class="card-body p-2.5 sm:p-3">
+              <div class="flex items-center gap-1.5">
+                <div class="bg-accent/10 rounded-md p-1 shrink-0">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-3.5 w-3.5 text-accent"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
+                    />
+                  </svg>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p
+                    class="font-semibold text-xs sm:text-sm truncate group-hover:text-primary transition-colors"
+                  >
+                    {{ child.locationCode }}
+                  </p>
+                  @if (child.description) {
+                    <p class="text-[10px] text-base-content/40 truncate">
+                      {{ child.description }}
+                    </p>
+                  }
+                </div>
+              </div>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="badge badge-xs badge-outline"
+                  >{{ countRecursiveProducts(child) }} prod</span
+                >
+                @if (child.children && child.children.length > 0) {
+                  <span class="badge badge-xs badge-accent badge-outline"
+                    >{{ child.children.length }} cajones</span
+                  >
+                }
+              </div>
+            </a>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Products — Mobile cards / Desktop table -->
+  @if (shelf() && !loading()) {
+    @if (shelf()!.shelfItems.length > 0) {
+      <div class="flex flex-col sm:flex-row gap-2 justify-between sm:items-center">
+        <h2 class="text-sm font-semibold text-base-content/70 whitespace-nowrap">
+          Productos en este cajón ({{ shelf()!.shelfItems.length }})
+        </h2>
+
+        <!-- Search & Sort Controls -->
+        <div class="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <input
+            #searchInput
+            type="text"
+            placeholder="Buscar producto..."
+            class="input input-bordered input-sm w-full sm:w-48"
+            (input)="searchTerm.set(searchInput.value)"
+          />
+          <select
+            class="select select-bordered select-sm w-full sm:w-auto font-medium"
+            (change)="sortBy.set($any($event.target).value)"
+            [value]="sortBy()"
+            title="Ordenar productos"
+          >
+            <option value="name_asc">Nombre (A-Z)</option>
+            <option value="name_desc">Nombre (Z-A)</option>
+            <option value="qty_desc">Stock (Mayor a menor)</option>
+            <option value="qty_asc">Stock (Menor a mayor)</option>
+            <option value="sku_asc">SKU (A-Z)</option>
+          </select>
+        </div>
+      </div>
+    }
+
+    <!-- Mobile cards -->
+    <div class="space-y-2 sm:hidden mt-3">
+      @for (item of filteredItems(); track item.id) {
+        <div
+          class="card bg-base-100 shadow-sm border border-base-300/30"
+          [class.ring-2]="isItemSelected(item.id)"
+          [class.ring-primary]="isItemSelected(item.id)"
+          draggable="true"
+          (dragstart)="onDragStart($event, item)"
+          (dragend)="onDragEnd($event)"
+        >
+          <div class="card-body p-3">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-center h-full mr-2">
+                <input
+                  type="checkbox"
+                  class="checkbox checkbox-sm checkbox-primary"
+                  [checked]="isItemSelected(item.id)"
+                  (change)="toggleItemSelection(item.id)"
+                  title="Seleccionar producto"
+                />
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="font-semibold text-sm">{{ item.product.name }}</p>
+                @if (item.product.sku) {
+                  <span class="badge badge-outline badge-xs font-mono mt-0.5">{{
+                    item.product.sku
+                  }}</span>
+                }
+                @if (item.product.price != null) {
+                  <p class="text-xs font-semibold text-success mt-1">
+                    {{ formatPrice(item.product.price) }}
+                  </p>
+                }
+                @if (item.product.categories && item.product.categories.length > 0) {
+                  <div class="flex flex-wrap gap-1 mt-1">
+                    @for (category of item.product.categories; track category.id) {
+                      <span class="badge badge-ghost badge-xs">{{ category.name }}</span>
+                    }
+                  </div>
+                }
+              </div>
+              <div class="flex items-center gap-1">
+                @if (editingItemId() === item.id) {
+                  <input
+                    type="number"
+                    class="input input-bordered input-xs w-16 text-center font-bold"
+                    [ngModel]="editQty()"
+                    (ngModelChange)="editQty.set($event)"
+                    min="1"
+                    title="Cantidad"
+                  />
+                  <button
+                    class="btn btn-success btn-xs btn-square"
+                    (click)="saveEditQty(item)"
+                    title="Guardar"
+                  >
+                    ✓
+                  </button>
+                  <button
+                    class="btn btn-ghost btn-xs btn-square"
+                    (click)="editingItemId.set(0)"
+                    title="Cancelar"
+                  >
+                    ✕
+                  </button>
+                } @else {
+                  <button
+                    class="btn btn-ghost btn-xs"
+                    (click)="startEditQty(item)"
+                    title="Editar cantidad"
+                  >
+                    <span class="text-lg font-bold">{{ item.quantity }}</span>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="h-3 w-3 opacity-40"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                      />
+                    </svg>
+                  </button>
+                }
+              </div>
+            </div>
+            <div class="flex gap-1 mt-2">
+              <button
+                class="btn btn-outline btn-primary btn-sm flex-1 gap-1"
+                (click)="openEditProduct(item)"
+                title="Editar producto"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                  />
+                </svg>
+                Editar
+              </button>
+              <button
+                class="btn btn-primary btn-sm flex-1 gap-1"
+                (click)="openMoveDialog(item)"
+                title="Mover stock"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+                  />
+                </svg>
+                Mover
+              </button>
+              <button
+                class="btn btn-ghost btn-sm text-error btn-square"
+                (click)="onRemoveItem(item)"
+                title="Quitar de estante"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="h-4 w-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Desktop table -->
+    <div class="hidden sm:block card bg-base-100 shadow-md">
+      <div class="card-body p-0">
+        <div class="overflow-x-auto">
+          <table class="table table-zebra">
+            <thead>
+              <tr>
+                <th class="w-10">
+                  <label>
+                    <input
+                      type="checkbox"
+                      class="checkbox checkbox-sm"
+                      [checked]="allSelected"
+                      [indeterminate]="indeterminate"
+                      (change)="toggleAllSelection($any($event.target).checked)"
+                      title="Seleccionar todos"
+                    />
+                  </label>
+                </th>
+                <th>Producto</th>
+                <th>SKU</th>
+                <th>Precio</th>
+                <th>Categorías</th>
+                <th>Cantidad</th>
+                <th class="text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of filteredItems(); track item.id) {
+                <tr
+                  class="hover"
+                  [class.bg-primary/5]="isItemSelected(item.id)"
+                  draggable="true"
+                  (dragstart)="onDragStart($event, item)"
+                  (dragend)="onDragEnd($event)"
+                >
+                  <td>
+                    <label>
+                      <input
+                        type="checkbox"
+                        class="checkbox checkbox-sm"
+                        [checked]="isItemSelected(item.id)"
+                        (change)="toggleItemSelection(item.id)"
+                        title="Seleccionar producto"
+                      />
+                    </label>
+                  </td>
+                  <td>
+                    <div class="font-medium">{{ item.product.name }}</div>
+                  </td>
+                  <td>
+                    @if (item.product.sku) {
+                      <span class="badge badge-outline badge-sm font-mono">{{
+                        item.product.sku
+                      }}</span>
+                    }
+                  </td>
+                  <td>
+                    @if (item.product.price != null) {
+                      <span class="font-semibold text-success">{{ formatPrice(item.product.price) }}</span>
+                    } @else {
+                      <span class="text-base-content/40">—</span>
+                    }
+                  </td>
+                  <td>
+                    <div class="flex flex-wrap gap-1">
+                      @for (category of item.product.categories; track category.id) {
+                        <span class="badge badge-ghost badge-xs">{{ category.name }}</span>
+                      }
+                    </div>
+                  </td>
+                  <td>
+                    @if (editingItemId() === item.id) {
+                      <div class="flex items-center gap-1">
+                        <input
+                          type="number"
+                          class="input input-bordered input-xs w-20 font-mono"
+                          [ngModel]="editQty()"
+                          (ngModelChange)="editQty.set($event)"
+                          min="1"
+                          title="Cantidad"
+                        />
+                        <button
+                          type="button"
+                          class="btn btn-success btn-xs"
+                          (click)="saveEditQty(item)"
+                        >
+                          ✓
+                        </button>
+                        <button
+                          type="button"
+                          class="btn btn-ghost btn-xs"
+                          (click)="editingItemId.set(0)"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    } @else {
+                      <button
+                        class="btn btn-ghost btn-xs gap-1 font-semibold"
+                        (click)="startEditQty(item)"
+                        title="Editar cantidad"
+                      >
+                        {{ item.quantity }} uds
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          class="h-3 w-3 opacity-40"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                          />
+                        </svg>
+                      </button>
+                    }
+                  </td>
+                  <td class="text-right">
+                    <div class="flex gap-1 justify-end">
+                      <button
+                        class="btn btn-ghost btn-sm btn-square"
+                        (click)="openEditProduct(item)"
+                        title="Editar producto"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          class="h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                          />
+                        </svg>
+                      </button>
+                      <button
+                        class="btn btn-primary btn-sm gap-1"
+                        (click)="openMoveDialog(item)"
+                        title="Mover stock"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          class="h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+                          />
+                        </svg>
+                        Mover
+                      </button>
+                      <button
+                        class="btn btn-ghost btn-sm text-error btn-square"
+                        (click)="onRemoveItem(item)"
+                        title="Quitar de estante"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          class="h-4 w-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    @if (shelf()!.shelfItems.length > 0 && filteredItems().length === 0) {
+      <div class="text-center py-8">
+        <p class="text-base-content/40 text-sm">
+          No se encontraron productos para la búsqueda actual.
+        </p>
+      </div>
+    }
+  }
+
+  <!-- Empty state -->
+  @if (
+    !loading() &&
+    shelf() &&
+    shelf()!.shelfItems.length === 0 &&
+    (!shelf()!.children || shelf()!.children!.length === 0)
+  ) {
+    <div class="text-center py-8">
+      <p class="text-base-content/40 text-sm">Estantería vacía.</p>
+      <div class="flex gap-2 justify-center mt-3">
+        <button type="button" class="btn btn-primary btn-sm" (click)="showAddProduct.set(true)">
+          Agregar primer producto
+        </button>
+        @if (canCreateSubShelf()) {
+          <button
+            type="button"
+            class="btn btn-outline btn-sm"
+            (click)="showCreateSubShelf.set(true)"
+          >
+            Crear cajón
+          </button>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Move Stock Dialog -->
+  @if (selectedItem()) {
+    <app-move-stock-dialog
+      [item]="selectedItem()!"
+      [currentShelfId]="shelf()!.id"
+      [shelves]="allShelves()"
+      (confirm)="onMoveConfirmed($event)"
+      (cancel)="closeMoveDialog()"
+    />
+  }
+
+  <!-- Batch Move Stock Dialog -->
+  @if (showBatchMoveDialog()) {
+    <app-move-stock-batch-dialog
+      [items]="getSelectedItems()"
+      [currentShelfId]="shelf()!.id"
+      [shelves]="allShelves()"
+      (confirm)="onBatchMoveConfirmed($event)"
+      (cancel)="closeBatchMoveDialog()"
+    />
+  }
+
+  <!-- Add Product Dialog (Unified Flow) -->
+  @if (showAddProduct()) {
+    <dialog class="modal modal-open modal-bottom sm:modal-middle" role="dialog" aria-modal="true">
+      <div class="modal-box">
+        <h3 class="font-bold text-base">Agregar Producto</h3>
+        <form
+          [formGroup]="createProductForm"
+          (ngSubmit)="onUnifiedAddProduct()"
+          class="space-y-3 mt-3"
+        >
+          <!-- Product name input with autocomplete -->
+          <div class="relative">
+            @if (selectedProduct()) {
+              <!-- Selected product badge -->
+              <div
+                class="flex items-center gap-2 bg-primary/10 border border-primary/30 rounded-lg px-3 py-2"
+              >
+                <span class="badge badge-primary badge-sm">Existente</span>
+                <span class="font-medium text-sm flex-1 truncate">{{
+                  selectedProduct()!.name
+                }}</span>
+                @if (selectedProduct()!.sku) {
+                  <span class="text-xs text-base-content/40 font-mono">{{
+                    selectedProduct()!.sku
+                  }}</span>
+                }
+                <button
+                  type="button"
+                  class="btn btn-ghost btn-xs btn-circle"
+                  (click)="clearSelection()"
+                  title="Cambiar producto"
+                >
+                  ✕
+                </button>
+              </div>
+            } @else {
+              <!-- Name input with suggestions -->
+              <input
+                formControlName="name"
+                type="text"
+                placeholder="Escribe el nombre del producto..."
+                class="input input-bordered input-sm w-full sm:input-md"
+                autocomplete="off"
+                (input)="newProductName.set($any($event.target).value)"
+              />
+              @if (nameSuggestions().length > 0) {
+                <div
+                  class="absolute z-10 left-0 right-0 top-full mt-0.5 bg-base-100 border border-base-300 rounded-lg shadow-lg max-h-44 overflow-y-auto"
+                >
+                  <p
+                    class="px-3 py-1.5 text-[11px] text-base-content/40 font-medium border-b border-base-300/50"
+                  >
+                    Productos existentes
+                  </p>
+                  @for (p of nameSuggestions(); track p.id) {
+                    <button
+                      type="button"
+                      class="flex items-center gap-2 w-full px-3 py-2 text-sm text-left hover:bg-primary/10 transition-colors"
+                      (click)="selectSuggestion(p)"
+                    >
+                      <span class="badge badge-xs badge-primary">P</span>
+                      <span class="font-medium truncate flex-1">{{ p.name }}</span>
+                      @if (p.sku) {
+                        <span class="text-xs text-base-content/40 font-mono ml-auto">{{
+                          p.sku
+                        }}</span>
+                      }
+                    </button>
+                  }
+                </div>
+              }
+            }
+          </div>
+
+          <!-- Extra fields for NEW product only -->
+          @if (!selectedProduct()) {
+            <input
+              formControlName="sku"
+              type="text"
+              placeholder="SKU (opcional)"
+              class="input input-bordered input-sm w-full sm:input-md"
+            />
+            <input
+              formControlName="description"
+              type="text"
+              placeholder="Descripción (opcional)"
+              class="input input-bordered input-sm w-full sm:input-md"
+            />
+            <label class="form-control w-full">
+              <span class="label-text text-xs text-base-content/60 mb-1">Precio (opcional)</span>
+              <input
+                type="text"
+                inputmode="decimal"
+                placeholder="Ej: 50.000,00"
+                class="input input-bordered input-sm w-full sm:input-md"
+                [value]="formatPriceInput(createProductForm.controls.price.value)"
+                (input)="onPriceInput($event, createProductForm.controls.price)"
+              />
+            </label>
+          }
+
+          <!-- Quantity (always visible) -->
+          <input
+            formControlName="quantity"
+            type="number"
+            class="input input-bordered input-sm w-full sm:input-md"
+            min="1"
+            placeholder="Cantidad"
+          />
+
+          <div class="modal-action">
+            <button type="button" class="btn btn-ghost btn-sm" (click)="resetAddDialog()">
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary btn-sm"
+              [disabled]="createProductForm.invalid || addingProduct()"
+            >
+              @if (addingProduct()) {
+                <span class="loading loading-spinner loading-xs"></span>
+              }
+              @if (selectedProduct()) {
+                Agregar
+              } @else {
+                Crear y Agregar
+              }
+            </button>
+          </div>
+        </form>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button type="button" (click)="resetAddDialog()" title="Cerrar">close</button>
+      </form>
+    </dialog>
+  }
+
+  <!-- Edit Product Dialog -->
+  @if (showEditProduct()) {
+    <dialog class="modal modal-open modal-bottom sm:modal-middle" role="dialog" aria-modal="true">
+      <div class="modal-box">
+        <h3 class="font-bold text-base">Editar Producto</h3>
+        <form
+          [formGroup]="editProductForm"
+          (ngSubmit)="onEditProductSubmit()"
+          class="space-y-3 mt-3"
+        >
+          <input
+            formControlName="name"
+            type="text"
+            placeholder="Nombre del producto"
+            class="input input-bordered input-sm w-full sm:input-md"
+          />
+          <input
+            formControlName="sku"
+            type="text"
+            placeholder="SKU (opcional)"
+            class="input input-bordered input-sm w-full sm:input-md"
+          />
+          <input
+            formControlName="description"
+            type="text"
+            placeholder="Descripción (opcional)"
+            class="input input-bordered input-sm w-full sm:input-md"
+          />
+          <label class="form-control w-full">
+            <span class="label-text text-xs text-base-content/60 mb-1">Precio (opcional)</span>
+            <input
+              type="text"
+              inputmode="decimal"
+              placeholder="Ej: 50.000,00"
+              class="input input-bordered input-sm w-full sm:input-md"
+              [value]="formatPriceInput(editProductForm.controls.price.value)"
+              (input)="onPriceInput($event, editProductForm.controls.price)"
+            />
+          </label>
+          <div class="space-y-1">
+            <p class="text-[10px] uppercase font-bold text-base-content/40 ml-1">Categorías</p>
+            <div class="flex flex-wrap gap-2 p-2 border border-base-300 rounded-lg min-h-[40px]">
+              @for (category of categories(); track category.id) {
+                <label class="label cursor-pointer gap-2 bg-base-200 px-2 py-1 rounded-md">
+                  <input
+                    type="checkbox"
+                    class="checkbox checkbox-xs checkbox-primary"
+                    [checked]="isEditProductCategorySelected(category.id)"
+                    (change)="toggleEditProductCategory(category.id)"
+                  />
+                  <span class="label-text text-xs">{{ category.name }}</span>
+                </label>
+              } @empty {
+                <p class="text-xs text-base-content/50">No hay categorías creadas.</p>
+              }
+            </div>
+          </div>
+          <div class="modal-action">
+            <button type="button" class="btn btn-ghost btn-sm" (click)="closeEditProduct()">
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary btn-sm"
+              [disabled]="editProductForm.invalid || editingProduct()"
+            >
+              @if (editingProduct()) {
+                <span class="loading loading-spinner loading-xs"></span>
+              }
+              Guardar
+            </button>
+          </div>
+        </form>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button type="button" (click)="closeEditProduct()" title="Cerrar">close</button>
+      </form>
+    </dialog>
+  }
+
+  <!-- Batch Category Dialog -->
+  @if (showBatchCategoryDialog()) {
+    <dialog class="modal modal-open modal-bottom sm:modal-middle" role="dialog" aria-modal="true">
+      <div class="modal-box">
+        <h3 class="font-bold text-base">Editar categorías</h3>
+        <p class="text-sm text-base-content/60 mt-1">
+          Se reemplazarán las categorías de {{ getSelectedItems().length }} productos seleccionados.
+        </p>
+        <div class="flex flex-wrap gap-2 p-3 mt-3 border border-base-300 rounded-lg min-h-[48px]">
+          @for (category of categories(); track category.id) {
+            <label class="label cursor-pointer gap-2 bg-base-200 px-2 py-1 rounded-md">
+              <input
+                type="checkbox"
+                class="checkbox checkbox-xs checkbox-primary"
+                [checked]="isBatchCategorySelected(category.id)"
+                (change)="toggleBatchCategory(category.id)"
+              />
+              <span class="label-text text-xs">{{ category.name }}</span>
+            </label>
+          } @empty {
+            <p class="text-xs text-base-content/50">No hay categorías creadas.</p>
+          }
+        </div>
+        <p class="text-xs text-warning mt-2">Al guardar, se sustituirán las categorías actuales de todos los productos seleccionados.</p>
+        <div class="modal-action">
+          <button type="button" class="btn btn-ghost btn-sm" [disabled]="savingBatchCategories()" (click)="closeBatchCategoryDialog()">Cancelar</button>
+          <button type="button" class="btn btn-primary btn-sm" [disabled]="savingBatchCategories()" (click)="saveBatchCategories()">
+            @if (savingBatchCategories()) {
+              <span class="loading loading-spinner loading-xs"></span>
+            }
+            Guardar categorías
+          </button>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button type="button" (click)="closeBatchCategoryDialog()" title="Cerrar">close</button>
+      </form>
+    </dialog>
+  }
+
+  <!-- Create Sub-shelf Dialog -->
+  @if (showCreateSubShelf()) {
+    <dialog class="modal modal-open modal-bottom sm:modal-middle" role="dialog" aria-modal="true">
+      <div class="modal-box">
+        <h3 class="font-bold text-base">Nuevo Cajón en {{ shelf()!.locationCode }}</h3>
+        <form [formGroup]="subShelfForm" (ngSubmit)="onCreateSubShelf()" class="space-y-3 mt-3">
+          <input
+            formControlName="locationCode"
+            type="text"
+            placeholder="Código del cajón (ej: Cajón-1)"
+            class="input input-bordered input-sm w-full sm:input-md"
+          />
+          <input
+            formControlName="description"
+            type="text"
+            placeholder="Descripción (opcional)"
+            class="input input-bordered input-sm w-full sm:input-md"
+          />
+          <div class="modal-action">
+            <button
+              type="button"
+              class="btn btn-ghost btn-sm"
+              (click)="showCreateSubShelf.set(false)"
+            >
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary btn-sm"
+              [disabled]="subShelfForm.invalid || creatingSubShelf()"
+            >
+              @if (creatingSubShelf()) {
+                <span class="loading loading-spinner loading-xs"></span>
+              }
+              Crear Cajón
+            </button>
+          </div>
+        </form>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button type="button" (click)="showCreateSubShelf.set(false)" title="Cerrar">close</button>
+      </form>
+    </dialog>
+  }
+
+  <!-- Edit Shelf Dialog -->
+  @if (showEditShelf()) {
+    <dialog class="modal modal-open modal-bottom sm:modal-middle" role="dialog" aria-modal="true">
+      <div class="modal-box">
+        <h3 class="font-bold text-base">Editar Estantería</h3>
+        <form [formGroup]="editShelfForm" (ngSubmit)="onSaveEditShelf()" class="space-y-3 mt-3">
+          <input
+            formControlName="locationCode"
+            type="text"
+            placeholder="Código ubicación"
+            class="input input-bordered input-sm w-full sm:input-md"
+          />
+          <input
+            formControlName="description"
+            type="text"
+            placeholder="Descripción"
+            class="input input-bordered input-sm w-full sm:input-md"
+          />
+          <div class="modal-action">
+            <button type="button" class="btn btn-ghost btn-sm" (click)="showEditShelf.set(false)">
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary btn-sm"
+              [disabled]="editShelfForm.invalid || savingShelf()"
+            >
+              @if (savingShelf()) {
+                <span class="loading loading-spinner loading-xs"></span>
+              }
+              Guardar
+            </button>
+          </div>
+        </form>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button type="button" (click)="showEditShelf.set(false)" title="Cerrar">close</button>
+      </form>
+    </dialog>
+  }
+
+  <!-- Delete Shelf Confirm (this shelf) -->
+  @if (confirmingDelete()) {
+    <dialog class="modal modal-open modal-bottom sm:modal-middle" role="dialog" aria-modal="true">
+      <div class="modal-box max-w-sm">
+        <h3 class="font-bold text-base">¿Eliminar estantería "{{ shelf()!.locationCode }}"?</h3>
+        <p class="text-sm text-base-content/70 mt-2">
+          @if (
+            shelf()!.shelfItems.length > 0 || (shelf()!.children && shelf()!.children!.length > 0)
+          ) {
+            Esta estantería contiene {{ shelf()!.shelfItems.length }} productos
+            @if (shelf()!.children && shelf()!.children!.length > 0) {
+              y {{ shelf()!.children!.length }} sub-estanterías
+            }
+            . ¿Qué deseas hacer?
+          } @else {
+            Esta estantería está vacía.
+          }
+        </p>
+        <div class="flex flex-col gap-2 mt-4">
+          @if (
+            shelf()!.parentId &&
+            (shelf()!.shelfItems.length > 0 || (shelf()!.children && shelf()!.children!.length > 0))
+          ) {
+            <button
+              class="btn btn-warning btn-sm w-full"
+              (click)="confirmDeleteShelfWithReassign()"
+              [disabled]="deletingShelf()"
+            >
+              @if (deletingShelf()) {
+                <span class="loading loading-spinner loading-xs"></span>
+              }
+              Reasignar productos al padre y eliminar
+            </button>
+          }
+          <button
+            class="btn btn-error btn-sm w-full"
+            (click)="confirmDeleteShelf()"
+            [disabled]="deletingShelf()"
+          >
+            @if (deletingShelf()) {
+              <span class="loading loading-spinner loading-xs"></span>
+            }
+            @if (
+              shelf()!.shelfItems.length > 0 || (shelf()!.children && shelf()!.children!.length > 0)
+            ) {
+              Eliminar estantería y todo su contenido
+            } @else {
+              Eliminar estantería
+            }
+          </button>
+          <button
+            type="button"
+            class="btn btn-ghost btn-sm w-full"
+            (click)="confirmingDelete.set(false)"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button type="button" (click)="confirmingDelete.set(false)" title="Cerrar">close</button>
+      </form>
+    </dialog>
+  }
+
+  <!-- Delete Sub-shelf Confirm (a child) -->
+  @if (subShelfToDelete()) {
+    <dialog class="modal modal-open modal-bottom sm:modal-middle" role="dialog" aria-modal="true">
+      <div class="modal-box max-w-sm">
+        <h3 class="font-bold text-base">
+          ¿Eliminar cajón "{{ subShelfToDelete()!.locationCode }}"?
+        </h3>
+        <p class="text-sm text-base-content/70 mt-2">
+          @if (countRecursiveProducts(subShelfToDelete()!) > 0) {
+            Este cajón contiene {{ countRecursiveProducts(subShelfToDelete()!) }} productos. ¿Qué
+            deseas hacer?
+          } @else {
+            Este cajón está vacío.
+          }
+        </p>
+        <div class="flex flex-col gap-2 mt-4">
+          @if (countRecursiveProducts(subShelfToDelete()!) > 0) {
+            <button
+              class="btn btn-warning btn-sm w-full"
+              (click)="confirmDeleteSubShelf('reassign')"
+              [disabled]="deletingSubShelf()"
+            >
+              @if (deletingSubShelf()) {
+                <span class="loading loading-spinner loading-xs"></span>
+              }
+              Mover productos a {{ shelf()!.locationCode }} y eliminar cajón
+            </button>
+          }
+          <button
+            class="btn btn-error btn-sm w-full"
+            (click)="confirmDeleteSubShelf('delete')"
+            [disabled]="deletingSubShelf()"
+          >
+            @if (deletingSubShelf()) {
+              <span class="loading loading-spinner loading-xs"></span>
+            }
+            @if (countRecursiveProducts(subShelfToDelete()!) > 0) {
+              Eliminar cajón y todos sus productos
+            } @else {
+              Eliminar cajón
+            }
+          </button>
+          <button
+            type="button"
+            class="btn btn-ghost btn-sm w-full"
+            (click)="subShelfToDelete.set(null)"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button type="button" (click)="subShelfToDelete.set(null)" title="Cerrar">close</button>
+      </form>
+    </dialog>
+  }
+
+  <!-- Remove Item Confirm -->
+  @if (itemToRemove()) {
+    <dialog class="modal modal-open modal-bottom sm:modal-middle" role="dialog" aria-modal="true">
+      <div class="modal-box max-w-xs">
+        <h3 class="font-bold text-base">¿Quitar producto?</h3>
+        <p class="text-sm text-base-content/70 mt-2">
+          Se quitará <span class="font-semibold">{{ itemToRemove()!.product.name }}</span> ({{
+            itemToRemove()!.quantity
+          }}
+          uds) de este estante.
+        </p>
+        <div class="modal-action">
+          <button type="button" class="btn btn-ghost btn-sm" (click)="itemToRemove.set(null)">
+            Cancelar
+          </button>
+          <button type="button" class="btn btn-error btn-sm" (click)="confirmRemoveItem()">
+            Quitar
+          </button>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button type="button" (click)="itemToRemove.set(null)" title="Cerrar">close</button>
+      </form>
+    </dialog>
+  }
+</div>

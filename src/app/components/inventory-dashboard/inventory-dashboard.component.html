@@ -1,0 +1,271 @@
+<div class="space-y-6">
+  <!-- Header + Stats -->
+  <div class="card-racing rounded-2xl overflow-hidden p-6 relative">
+    <div class="racing-stripe absolute top-0 left-0"></div>
+    <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-4">
+        <div class="bg-primary/20 p-3 rounded-xl border border-primary/30 animate-piston">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-3xl font-black text-base-content sm:text-4xl tracking-tighter italic uppercase font-technical">Control de Estantes</h1>
+          <p class="text-sm text-base-content/40 uppercase tracking-[0.2em] font-bold">Logística de Alta Precisión</p>
+        </div>
+      </div>
+      
+      <div class="flex gap-8 items-center bg-base-300/50 p-4 rounded-xl border border-base-content/10">
+        <div class="text-center">
+          <p class="text-3xl font-black text-primary font-technical leading-none">{{ totalShelves() }}</p>
+          <p class="text-[10px] uppercase tracking-widest font-bold opacity-40 mt-1">Ubicaciones</p>
+        </div>
+        <div class="h-10 w-[1px] bg-base-content/10"></div>
+        <div class="text-center">
+          <p class="text-3xl font-black text-accent font-technical leading-none">{{ totalItems() }}</p>
+          <p class="text-[10px] uppercase tracking-widest font-bold opacity-40 mt-1">Existencias</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter & Actions -->
+  <div class="flex flex-col sm:flex-row gap-3">
+    <div class="relative flex-1 group">
+      <input
+        type="text"
+        placeholder="Búsqueda de Telemetría (Estante o Producto)..."
+        class="input input-bordered w-full pl-10 h-12 bg-base-100/50 border-base-content/10 focus:border-primary/50 transition-all font-technical tracking-wide"
+        [value]="filterQuery()"
+        (input)="onFilterChange($event)"
+      />
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        class="h-5 w-5 absolute left-3 top-1/2 -translate-y-1/2 text-primary opacity-50 group-focus-within:opacity-100 transition-opacity"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+      @if (filterQuery()) {
+        <button class="btn btn-ghost btn-xs btn-circle absolute right-2 top-1/2 -translate-y-1/2" (click)="filterQuery.set('')">✕</button>
+      }
+    </div>
+    <button
+      class="btn btn-primary h-12 gap-2 btn-mechanical shadow-lg shadow-primary/20 font-technical italic text-lg uppercase"
+      (click)="showCreateShelf.set(true)"
+    >
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4" />
+      </svg>
+      Añadir Ubicación
+    </button>
+  </div>
+
+  <!-- Optimization Alerts -->
+  <app-optimization-alert />
+
+  <!-- Shelves Grid -->
+  @if (!loading()) {
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      @for (shelf of paginatedShelves(); track shelf.id) {
+        <div class="card-racing group flex flex-col h-full active:scale-[0.98] transition-transform cursor-pointer" [routerLink]="['/shelf', shelf.id]">
+          <div class="p-5 flex-1">
+            <div class="flex items-start justify-between gap-4 mb-4">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="bg-primary/10 rounded-lg p-2 group-hover:bg-primary group-hover:text-primary-content transition-all border border-primary/20">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                  </svg>
+                </div>
+                <div class="min-w-0">
+                  <h3 class="font-technical text-xl leading-none text-base-content group-hover:text-primary transition-colors">{{ shelf.locationCode }}</h3>
+                  @if (shelf.description) {
+                    <p class="text-[11px] uppercase tracking-wider font-bold opacity-40 truncate mt-1">{{ shelf.description }}</p>
+                  }
+                </div>
+              </div>
+              <button
+                class="btn btn-ghost btn-xs btn-square text-error/40 hover:text-error hover:bg-error/10"
+                (click)="onDeleteShelf(shelf); $event.stopPropagation()"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            </div>
+
+            <!-- Items preview -->
+            <div class="space-y-2 mb-4">
+              @if (shelf.shelfItems.length > 0) {
+                @for (item of shelf.shelfItems.slice(0, 3); track item.id) {
+                  <div class="flex items-center justify-between text-[11px] bg-base-content/5 border border-base-content/5 rounded-md px-3 py-1.5 font-mono group-hover:bg-base-content/10 transition-colors">
+                    <span class="truncate text-base-content/70 uppercase">{{ item.product.name }}</span>
+                    <span class="text-primary font-bold ml-2">{{ item.quantity }}</span>
+                  </div>
+                }
+                @if (shelf.shelfItems.length > 3) {
+                  <p class="text-[10px] font-bold text-center opacity-30 uppercase tracking-widest mt-2">+{{ shelf.shelfItems.length - 3 }} Componentes</p>
+                }
+              } @else if (shelf.children && shelf.children.length > 0) {
+                <div class="bg-base-300/50 rounded-lg p-3 text-center border border-base-content/5">
+                   <p class="font-technical text-accent text-lg leading-none">{{ countProductsRecursive(shelf) }}</p>
+                   <p class="text-[9px] uppercase font-black opacity-30 mt-1">PRODUCTOS EN {{ shelf.children.length }} SUB-NIVELES</p>
+                </div>
+              } @else {
+                <div class="bg-base-300/20 border border-dashed border-base-content/10 rounded-lg p-3 text-center">
+                  <p class="text-[10px] uppercase font-black opacity-20">Ubicación Disponible</p>
+                </div>
+              }
+            </div>
+          </div>
+          
+          <div class="px-5 py-3 bg-base-300/30 border-t border-base-content/5 flex items-center justify-between">
+            <span class="text-[10px] font-bold opacity-30 uppercase tracking-[0.2em]">Telemetría OK</span>
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-accent animate-pulse" viewBox="0 0 20 20" fill="currentColor">
+              <circle cx="10" cy="10" r="10" />
+            </svg>
+          </div>
+        </div>
+      }
+    </div>
+
+    <!-- Pagination Controls -->
+    @if (totalPages() > 1) {
+      <div class="flex items-center justify-between mt-4">
+        <p class="text-sm text-base-content/60">
+          Mostrando página {{ page() }} de {{ totalPages() }} ({{ filteredShelves().length }} en
+          total)
+        </p>
+        <div class="join">
+          <button
+            class="join-item btn btn-sm"
+            [disabled]="page() === 1"
+            (click)="prevPage()"
+            title="Página anterior"
+          >
+            «
+          </button>
+          <button class="join-item btn btn-sm font-normal cursor-default hover:bg-base-200">
+            Pág. {{ page() }}
+          </button>
+          <button
+            class="join-item btn btn-sm"
+            [disabled]="page() >= totalPages()"
+            (click)="nextPage()"
+            title="Página siguiente"
+          >
+            »
+          </button>
+        </div>
+      </div>
+    }
+  }
+
+  <!-- Empty state -->
+  @if (!loading() && filteredShelves().length === 0 && !filterQuery()) {
+    <div class="text-center py-10">
+      <p class="text-base-content/40 text-sm">No hay estanterías registradas.</p>
+    </div>
+  }
+  @if (!loading() && filteredShelves().length === 0 && filterQuery()) {
+    <div class="text-center py-10">
+      <p class="text-base-content/40 text-sm">
+        No se encontraron resultados para "{{ filterQuery() }}"
+      </p>
+    </div>
+  }
+
+  <!-- Create Shelf Dialog -->
+  @if (showCreateShelf()) {
+    <dialog
+      class="modal modal-open modal-bottom sm:modal-middle"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Crear estantería"
+    >
+      <div class="modal-box">
+        <h3 class="font-bold text-base">Nueva Estantería</h3>
+        <form [formGroup]="shelfForm" (ngSubmit)="onCreateShelf()" class="space-y-3 mt-3">
+          <input
+            formControlName="locationCode"
+            type="text"
+            placeholder="Código ubicación (ej: EST-E5)"
+            class="input input-bordered input-sm w-full sm:input-md"
+          />
+          <input
+            formControlName="description"
+            type="text"
+            placeholder="Descripción (opcional)"
+            class="input input-bordered input-sm w-full sm:input-md"
+          />
+          <div class="modal-action">
+            <button type="button" class="btn btn-ghost btn-sm" (click)="showCreateShelf.set(false)">
+              Cancelar
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary btn-sm"
+              [disabled]="shelfForm.invalid || savingShelf()"
+            >
+              @if (savingShelf()) {
+                <span class="loading loading-spinner loading-xs"></span>
+              }
+              Crear
+            </button>
+          </div>
+        </form>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button type="button" (click)="showCreateShelf.set(false)" title="Cerrar">close</button>
+      </form>
+    </dialog>
+  }
+
+  <!-- Delete Shelf Confirm -->
+  @if (shelfToDelete()) {
+    <dialog
+      class="modal modal-open modal-bottom sm:modal-middle"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Confirmar eliminación"
+    >
+      <div class="modal-box max-w-xs">
+        <h3 class="font-bold text-base">¿Eliminar estantería?</h3>
+        <p class="text-sm text-base-content/70 mt-2">
+          <span class="font-semibold">{{ shelfToDelete()!.locationCode }}</span>
+          @if (
+            shelfToDelete()!.shelfItems.length > 0 ||
+            (shelfToDelete()!.children && shelfToDelete()!.children!.length > 0)
+          ) {
+            contiene {{ shelfToDelete()!.shelfItems.length }} productos
+            @if (shelfToDelete()!.children && shelfToDelete()!.children!.length > 0) {
+              y {{ shelfToDelete()!.children!.length }} sub-estanterías
+            }
+            . Todo será eliminado.
+          }
+        </p>
+        <div class="modal-action">
+          <button type="button" class="btn btn-ghost btn-sm" (click)="shelfToDelete.set(null)">
+            Cancelar
+          </button>
+          <button
+            type="button"
+            class="btn btn-error btn-sm"
+            (click)="confirmDeleteShelf()"
+            [disabled]="deletingShelf()"
+          >
+            @if (deletingShelf()) {
+              <span class="loading loading-spinner loading-xs"></span>
+            }
+            Eliminar
+          </button>
+        </div>
+      </div>
+      <form method="dialog" class="modal-backdrop">
+        <button type="button" (click)="shelfToDelete.set(null)" title="Cerrar">close</button>
+      </form>
+    </dialog>
+  }
+</div>
